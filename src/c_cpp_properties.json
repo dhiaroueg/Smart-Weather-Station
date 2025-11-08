@@ -1,0 +1,19 @@
+{
+  "configurations": [
+    {
+      "name": "Win32",
+      "includePath": [
+        "${workspaceFolder}/**",
+        "${workspaceFolder}/lib/tflite-micro",
+        "${workspaceFolder}/lib/tflite-micro/tensorflow",
+        "${workspaceFolder}/lib/tflite-micro/third_party/flatbuffers/include"
+      ],
+      "defines": [],
+      "compilerPath": "C:/Users/User/.platformio/packages/toolchain-xtensa/bin/xtensa-esp32-elf-gcc.exe",
+      "cStandard": "c11",
+      "cppStandard": "c++17",
+      "intelliSenseMode": "windows-gcc-x64"
+    }
+  ],
+  "version": 4
+}
