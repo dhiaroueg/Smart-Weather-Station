@@ -1,63 +1,54 @@
-# Station Météo TinyML - ESP32 + TensorFlow Lite Micro
+# Smart Weather Station with TinyML on ESP32
 
-Projet de station météo connectée basée sur une carte ESP32, des capteurs environnementaux, un affichage OLED et un modèle TinyML pour prédire une augmentation de température à court terme.
+This project is a connected weather station built around an ESP32 microcontroller. It reads environmental data from sensors, displays live information on an OLED screen, triggers local alerts, and sends telemetry to ThingSpeak.
 
-Le système lit des données de température, d’humidité et de luminosité, affiche les informations localement sur un écran OLED, active une alerte visuelle/sonore si les seuils sont dépassés, et envoie les mesures vers ThingSpeak.
+It also includes a TinyML model for short-term temperature prediction, allowing the device to forecast temperature based on recent readings before the threshold is reached.
 
-## 1. Vue d’ensemble
+## Overview
 
-Ce projet combine :
+The system combines:
 
-- un ESP32 pour la collecte et le traitement local,
-- un capteur DHT11 pour température et humidité,
-- une photo-résistance (LDR) pour mesurer la luminosité,
-- un écran OLED SSD1306 pour afficher les données,
-- un modèle de machine learning TinyML pour prévoir la température future,
-- une connexion Wi‑Fi pour envoyer les données vers ThingSpeak.
+- ESP32 for local processing and Wi‑Fi communication
+- DHT11 sensor for temperature and humidity
+- LDR sensor for light level measurement
+- SSD1306 OLED display for local visualization
+- TinyML inference for temperature forecasting
+- ThingSpeak cloud upload for remote monitoring
+- LED + buzzer for local warning alerts
 
-L’objectif principal est de surveiller l’environnement et d’alerter lorsque la température mesurée ou prédite dépasse un seuil défini.
+## Features
 
----
+- Temperature sensing with DHT11
+- Humidity sensing with DHT11
+- Light intensity measurement with LDR
+- Real-time OLED display of sensor values
+- Short-term temperature prediction using a sliding window model
+- Local alert system with LED and buzzer
+- ThingSpeak data upload
+- Embedded TensorFlow Lite Micro inference on ESP32
 
-## 2. Fonctionnalités
+## Hardware Requirements
 
-- Mesure de température via DHT11
-- Mesure d’humidité via DHT11
-- Mesure de luminosité via LDR
-- Affichage sur OLED : température, humidité, luminosité, prédiction
-- Alerte locale avec LED et buzzer
-- Envoi des données vers ThingSpeak
-- Prédiction de température future à partir d’une fenêtre de valeurs glissantes
-- Modèle TensorFlow Lite Micro embarqué dans l’ESP32
+### Components
 
----
+- ESP32 development board
+- DHT11 or DHT22 sensor
+- LDR and resistor network
+- SSD1306 OLED display (128x64, I2C)
+- LED
+- Buzzer
+- Jumper wires
+- Breadboard (optional but recommended)
 
-## 3. Matériel requis
-
-### Composants
-
-- ESP32 DevKit (ou carte compatible ESP32)
-- DHT11 ou DHT22
-- LDR / résistance selon montage
-- Écran OLED SSD1306 128x64 I2C
-- LED 2 ou 3 broches
-- Buzzer actif/passif
-- Fils de connexion
-- Résistances et breadboard si nécessaire
-
-### Broches utilisées dans le code
+### Pin mapping used in the firmware
 
 - DHT11 -> GPIO 15
-- LDR -> GPIO 34 (analogique)
+- LDR -> GPIO 34
 - LED -> GPIO 2
 - Buzzer -> GPIO 13
-- OLED -> I2C (adresse 0x3C)
+- OLED -> I2C (default address 0x3C)
 
-> Le montage exact dépend de votre câblage. Vérifiez les broches sur votre carte avant de flasher.
-
----
-
-## 4. Structure du projet
+## Project Structure
 
 ```text
 station_m-t-o/
@@ -85,31 +76,27 @@ station_m-t-o/
 └─ .vscode/
 ```
 
-### Description des fichiers importants
+## Key Files
 
-- `platformio.ini` : configuration du projet PlatformIO pour ESP32
-- `src/main.cpp` : firmware principal (capteurs, OLED, Wi‑Fi, ThingSpeak, inference TinyML)
-- `src/train_model.py` : entraînement du modèle à partir d’un historique de température
-- `src/convert_tflite.py` : conversion du modèle Keras vers TensorFlow Lite
-- `src/coverttocc.py` : génération du fichier `model.cc` contenant le binaire TFLite
-- `src/fetch_thingspeak.py` : récupération des données depuis ThingSpeak
-- `src/model.tflite` : modèle TinyML compilé
-- `src/scaler_params.npz` : paramètres de normalisation utilisés pendant l’inférence
-- `model.cc` : fichier chargé par le firmware pour embarquer le modèle
+- `platformio.ini` – PlatformIO project configuration for ESP32
+- `src/main.cpp` – main firmware for sensors, display, Wi‑Fi, alerts, and inference
+- `src/train_model.py` – trains the temperature prediction model
+- `src/convert_tflite.py` – converts the Keras model into TensorFlow Lite
+- `src/coverttocc.py` – generates the C header file used by the firmware
+- `src/fetch_thingspeak.py` – downloads historical data from ThingSpeak
+- `src/model.tflite` – compiled model for embedded inference
+- `src/scaler_params.npz` – normalization statistics used by the model
+- `model.cc` – embedded compiled model data for Arduino/ESP32
 
----
+## Software Dependencies
 
-## 5. Dépendances logicielles
-
-### Pour le firmware ESP32
+### Embedded firmware
 
 - VS Code
 - PlatformIO
-- Extension PlatformIO pour VS Code
+- PlatformIO VS Code extension
 
-### Pour l’entraînement du modèle
-
-Le script Python requiert généralement :
+### Python environment for training and conversion
 
 - Python 3.9+
 - TensorFlow
@@ -117,53 +104,45 @@ Le script Python requiert généralement :
 - Pandas
 - scikit-learn
 
-Exemple d’installation :
+Install dependencies with:
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate   # Linux/macOS
-# ou .venv\Scripts\activate  # Windows
+source .venv/bin/activate     # Linux/macOS
+# or .venv\Scripts\activate  # Windows
 
 pip install tensorflow pandas numpy scikit-learn
 ```
 
-> Selon votre environnement, la version de TensorFlow peut varier en fonction de votre carte et de votre système d’exploitation.
+## Configuration
 
----
+### Wi‑Fi and ThingSpeak credentials
 
-## 6. Configuration avant utilisation
-
-### 6.1 Paramètres Wi‑Fi et ThingSpeak
-
-Ouvrez le fichier :
-
-- `src/main.cpp`
-
-Modifiez ces valeurs :
+Open `src/main.cpp` and update the connection values:
 
 ```cpp
-const char* ssid = "VOTRE_WIFI";
-const char* password = "VOTRE_MOT_DE_PASSE";
-String apiKey = "VOTRE_API_KEY_THINGSPEAK";
+const char* ssid = "YOUR_WIFI_SSID";
+const char* password = "YOUR_WIFI_PASSWORD";
+String apiKey = "YOUR_THINGSPEAK_API_KEY";
 ```
 
-Il faut aussi configurer le serveur ThingSpeak s’il est utilisé exactement comme prévu :
+You may also need to confirm the ThingSpeak endpoint:
 
 ```cpp
 const char* server = "http://api.thingspeak.com/update";
 ```
 
-### 6.2 Seuil d’alerte
+### Alert threshold
 
-Vous pouvez modifier le seuil de température :
+You can change the warning threshold here:
 
 ```cpp
 #define TEMP_ALERT 25.0
 ```
 
-### 6.3 Paramètres de normalisation du modèle
+### Model normalization parameters
 
-Dans le firmware, on trouve :
+These values must match the model that was trained:
 
 ```cpp
 const int N_STEPS = 6;
@@ -171,220 +150,124 @@ float mean_train = 23.0;
 float std_train  = 2.0;
 ```
 
-Ces valeurs doivent correspondre à celles utilisées lors de l’entraînement du modèle. Elles sont stockées dans `scaler_params.npz` et doivent être cohérentes avec le modèle exporté pour éviter des prédictions inutiles ou fausses.
+These values should remain consistent with the data used during training and the exported model.
 
----
+## Workflow
 
-## 7. Flux de travail complet
-
-### Étape 1 : Collecter des données
-
-Utilisez le script :
+### 1. Collect historical data
 
 ```bash
 python src/fetch_thingspeak.py
 ```
 
-Ce script télécharge les données depuis ThingSpeak et sauvegarde un fichier :
+This generates:
 
 - `src/thingspeak_data.csv`
 
-### Étape 2 : Entraîner le modèle
+### 2. Train the model
 
 ```bash
 python src/train_model.py
 ```
 
-Cette étape génère :
+This generates:
 
 - `src/model_keras.h5`
 - `src/scaler_params.npz`
 
-### Étape 3 : Convertir en TensorFlow Lite
+### 3. Convert to TensorFlow Lite
 
 ```bash
 python src/convert_tflite.py
 ```
 
-Le modèle Keras est converti vers :
+This creates:
 
 - `src/model.tflite`
 
-### Étape 4 : Générer le fichier C embarqué
+### 4. Generate the embedded C model file
 
 ```bash
 python src/coverttocc.py
 ```
 
-Ce script produit :
+This creates:
 
 - `model.cc`
 
-Ce fichier est ensuite utilisé par le firmware Arduino/ESP32.
+This file is then included and used by the ESP32 firmware.
 
-> Dans le dépôt, un `model.cc` est déjà présent, mais il doit être régénéré si le modèle change.
+## Build and Upload
 
----
-
-## 8. Compilation et flash du firmware
-
-### Ouvrir le projet
-
-Dans VS Code :
-
-1. Ouvrez le dossier du projet
-2. Installez l’extension PlatformIO
-3. Vérifiez que `platformio.ini` est bien détecté
-
-### Compiler
+### Compile the project
 
 ```bash
 pio run
 ```
 
-### Flasher sur la carte
+### Upload to the ESP32
 
 ```bash
 pio run --target upload
 ```
 
-### Ouvrir le moniteur série
+### Open serial monitor
 
 ```bash
 pio device monitor
 ```
 
----
+## Usage
 
-## 9. Déploiement et utilisation
+After powering on the ESP32:
 
-Après le démarrage de l’ESP32 :
+1. It connects to Wi‑Fi
+2. It initializes the OLED display
+3. It reads temperature, humidity, and light intensity
+4. It pushes the latest values into a sliding prediction window
+5. It runs TinyML inference to estimate near-future temperature
+6. It triggers the LED and buzzer if the measured or predicted temperature exceeds the defined threshold
+7. It sends the collected data to ThingSpeak
 
-1. La carte se connecte au Wi‑Fi
-2. L’écran OLED affiche le statut de démarrage
-3. Les capteurs sont lus périodiquement
-4. La température, l’humidité et la luminosité sont affichées
-5. Une fenêtre glissante de valeurs est alimentée
-6. Le modèle TinyML tente une prédiction de température future
-7. Si la température mesurée ou prédite dépasse le seuil, la LED et le buzzer s’activent
-8. Les données sont envoyées vers ThingSpeak toutes les quelques secondes ou selon le réglage du code
-
----
-
-## 10. Exemple de fonctionnement
-
-Affichage OLED attendu :
+## Example OLED output
 
 ```text
-Station Meteo Int.
+Station Weather Int.
 Temp: 24.8 C
 Hum:  45.0 %
 Lumi: 78 %
 ```
 
-Et si la prédiction est disponible :
+If a prediction is available:
 
 ```text
 Pred T+: 26.5 C
 ```
 
----
+## Notes
 
-## 11. Points importants à vérifier
+- The project is designed as a prototype and learning tool.
+- The Wi‑Fi SSID/password and ThingSpeak API key should not be committed to a public repository.
+- Model compatibility and normalization parameters must stay aligned between training and inference.
 
-### 11.1 Compatibilité du modèle
+## Possible Improvements
 
-Le code C++ attend :
+- Improve sensor calibration
+- Replace DHT11 with DHT22 for better precision
+- Add multiple weather features to the model
+- Add local storage when the network is unavailable
+- Add an online dashboard for visualization
+- Trigger email or SMS notifications when alert conditions are met
 
-- un modèle compatible avec TensorFlow Lite Micro,
-- une taille de mémoire suffisante dans le tensor arena,
-- un format de données cohérent avec les paramètres de normalisation.
+## License
 
-Si l’inférence ne fonctionne pas, vérifiez :
+This project is provided for educational and experimental use. Please respect the licenses of the third-party libraries used in this project.
 
-- présence de `model.cc`
-- taille de `tensor_arena`
-- cohérence entre `N_STEPS`, `mean_train`, `std_train`
-- version du modèle et des opérations supportées
+## References
 
-### 11.2 Problèmes fréquents
-
-#### Le modèle ne charge pas
-
-Vérifiez :
-
-- `model.cc` est bien généré
-- le fichier n’est pas vide
-- le modèle TFLite est compatible avec l’ESP32
-
-#### Les prédictions sont incohérentes
-
-Vérifiez :
-
-- `N_STEPS` dans le modèle et dans le firmware
-- `mean_train` / `std_train`
-- le script d’entraînement et les données de température
-
-#### L’ESP32 ne se connecte pas au Wi‑Fi
-
-Vérifiez :
-
-- SSID et mot de passe
-- qualité du signal
-- présence du mode 2.4 GHz si votre routeur est en double bande
-
----
-
-## 12. Sécurité et bonnes pratiques
-
-- Ne laissez pas vos identifiants Wi‑Fi ou votre clé API ThingSpeak dans le dépôt public.
-- Préférez les variables d’environnement ou un fichier de configuration local non versionné.
-- Ne publiez pas les fichiers contenant des secrets dans GitHub.
-
----
-
-## 13. Possibles améliorations
-
-- Ajouter une logique de calibration automatique des capteurs
-- Utiliser un DHT22 plus précis
-- Ajouter des seuils différents selon les heures de journée
-- Envoyer des alertes SMS/Email quand le seuil est dépassé
-- Ajouter un stockage local des données si le réseau est indisponible
-- Ajouter un dashboard web ou visualisation graphique
-- Passer à un modèle plus robuste avec plusieurs variables d’entrée
-
----
-
-## 14. Licence
-
-Ce projet est fourni à titre éducatif et de démonstration. Si vous le réutilisez, ajoutez la mention de l’auteur original et respectez les licences des bibliothèques tierces utilisées.
-
----
-
-## 15. Conclusion
-
-Ce projet illustre un cas réel d’intégration de capteurs embarqués, de cloud IoT et de TinyML sur microcontrôleur. Il est idéal pour apprendre :
-
-- la programmation ESP32,
-- la collecte de données environnementales,
-- la communication Wi‑Fi,
-- le stockage cloud avec ThingSpeak,
-- le développement et l’intégration d’un modèle de prédiction embarqué.
-
----
-
-## 16. Références utiles
-
-- PlatformIO : https://platformio.org/
-- ESP32 Arduino Core : https://github.com/espressif/arduino-esp32
-- TensorFlow Lite Micro : https://www.tensorflow.org/lite/microcontrollers
-- ThingSpeak : https://thingspeak.com/
-- Adafruit SSD1306 : https://github.com/adafruit/Adafruit_SSD1306
-- Adafruit DHT : https://github.com/adafruit/Adafruit_Python_DHT
-
-Si vous voulez, je peux aussi vous préparer :
-
-- une version du README en anglais,
-- une version plus professionnelle pour GitHub,
-- un README avec schéma de câblage et captures d’écran,
-- ou une version plus courte et plus élégante pour un portfolio.
+- PlatformIO: https://platformio.org/
+- ESP32 Arduino Core: https://github.com/espressif/arduino-esp32
+- TensorFlow Lite Micro: https://www.tensorflow.org/lite/microcontrollers
+- ThingSpeak: https://thingspeak.com/
+- Adafruit SSD1306: https://github.com/adafruit/Adafruit_SSD1306
+- Adafruit DHT: https://github.com/adafruit/Adafruit_Python_DHT
